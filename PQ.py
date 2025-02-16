@@ -9,6 +9,8 @@ class PQ:
         self.REMOVED = '<removed-task>' 
         self.log_filename = "queue_log.txt"
 
+        open(self.log_filename, "w").close()
+
         logging.basicConfig(
             filename=self.log_filename,
             level=logging.INFO,

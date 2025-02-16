@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import PQ
+import logging
 
 class Gridworld:
     def __init__(self, width, height, obstacle_prob, max_cost, connectivity):
@@ -8,7 +9,16 @@ class Gridworld:
         self.height = height
         self.grid = np.random.randint(1, max_cost + 1, (height, width))
         self.connectivity = connectivity
-        self.grid[np.random.rand(height, width) < obstacle_prob] = -1  
+        self.grid[np.random.rand(height, width) < obstacle_prob] = -1
+        self.log_filename = "grid_log.txt"
+
+        open(self.log_filename, "w").close()
+
+        logging.basicConfig(
+            filename=self.log_filename,
+            level=logging.INFO,
+            format="%(asctime)s - %(message)s"
+        )
 
     def is_within_bounds(self, x, y):
         return 0 <= x < self.height and 0 <= y < self.width
@@ -29,6 +39,7 @@ class Gridworld:
 
         # Overlay path cells with green
         if path:
+            self.log(path, "Path:")
             for (x, y) in path:
                 if (x, y) != start and (x, y) != goal:
                     ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='green', alpha=0.5))  # Path in green
@@ -82,3 +93,7 @@ class Gridworld:
                     open_set.add(neighbor.state)
 
         return False
+    
+    def log(self, elems, message): 
+        with open(self.log_filename, "a") as log_file:
+            log_file.write(f"{message} {elems}\n")
