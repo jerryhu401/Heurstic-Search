@@ -72,10 +72,10 @@ class Node:
         return hash(self.state)
 
     def __eq__(self, other):
-        return self.state == other.state
+        return other != None and self.state == other.state
 
     def __ne__(self, other):
-        return self.state != other.state
+        return other == None or self.state != other.state
     
     def expand_node(self, grid):
         x, y = self.state

@@ -1,160 +1,87 @@
-import heapq
-import random
-import matplotlib.pyplot as plt
-import numpy as np
+import math
+import Util
+import heuristics as heu
 
-class Gridworld:
-    def __init__(self, width, height, obstacle_prob, max_cost, connectivity):
-        self.width = width
-        self.height = height
-        self.grid = np.random.randint(1, max_cost + 1, (height, width))
-        self.connectivity = connectivity
-
-        # Add obstacles
-        for i in range(height):
-            for j in range(width):
-                if random.random() < obstacle_prob:
-                    self.grid[i, j] = -1  # -1 represents an obstacle
-
-    def is_within_bounds(self, x, y):
-        return 0 <= x < self.height and 0 <= y < self.width
-
-    def is_traversable(self, x, y):
-        return self.is_within_bounds(x, y) and self.grid[x, y] != -1
-
-    def expand_node(self, node):
-        x, y = node
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        if self.connectivity == 8:
-            directions += [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-
-        result = []
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if self.is_traversable(nx, ny):
-                result.append((nx, ny))
-
-        return result
-
-    def draw_grid(self, path=None, start=None, goal=None, open_list=None, closed_list=None):
-        fig, ax = plt.subplots(figsize=(10, 10))
-        grid_display = np.full_like(self.grid, fill_value=0.0, dtype=float)  # All cells white
-
-        for i in range(self.height):
-            for j in range(self.width):
-                if self.grid[i, j] == -1:
-                    grid_display[i, j] = 1.0  # Obstacles (black)
-
-        ax.imshow(grid_display, cmap=plt.cm.binary, vmin=0, vmax=1)  # Binary colormap (0 -> white, 1 -> black)
-
-        # Overlay path cells with green
-        if path:
-            for (x, y) in path:
-                if (x, y) != start and (x, y) != goal:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='green', alpha=0.5))  # Path in green
-                elif (x, y) == start:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='blue', alpha=0.5))  # start in blue
-                else:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='red', alpha=0.5))  # goal in red
-
-        # Overlay open list cells with yellow
-        if open_list:
-            for (x, y) in open_list:
-                ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='yellow', alpha=0.5))
-
-        # Overlay closed list cells with gray
-        if closed_list:
-            for (x, y) in closed_list:
-                ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='gray', alpha=0.5))
-
-        for i in range(self.height):
-            for j in range(self.width):
-                if self.grid[i, j] == -1:
-                    ax.text(j, i, 'o', ha='center', va='center', color='red', fontsize=8)  # Obstacles
-                else:
-                    ax.text(j, i, int(self.grid[i, j]), ha='center', va='center', color='black', fontsize=8)
-
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.axis('off')
-        plt.show()
-
-def heuristic_manhattan(node, goal):
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
-
-def heuristic_euclidean(node, goal):
-    return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
-
-def ara_star(grid, start, goal, heuristic, initial_epsilon=2.5, epsilon_decay=0.1):
-    open_list = []
-    heapq.heappush(open_list, (0, start))
-    came_from = {}
-    g_score = {start: 0}
-    open_set = {start}
+def ARA_star(grid, start, goal, h, weight, epsilon, time):
+    open_set = set()
+    open_set.add(start.state)
+    open_list = Util.PQ()
+    open_list.push((start), 0)
     closed_set = set()
-    incons = set()
+    incons_set = set()
+    best_path = None
+    best_cost = math.inf
+    g_scores = {start.state: 0}
+    g_scores[goal] = float('inf')
 
-    epsilon = initial_epsilon
-    g_score[goal] = float('inf')
+    while weight >= 1 and time > 0:
+        time -= 1
+        current_node = improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set)
+        if current_node == None:
+            break
 
-    def improve_path():
-        while open_list and g_score[goal] > open_list[0][0]:
-            current_f, current_node = heapq.heappop(open_list)
-            open_set.remove(current_node)
-            closed_set.add(current_node)
-
-            for neighbor in grid.expand_node(current_node):
-                tentative_g = g_score[current_node] + grid.grid[neighbor]
-                if neighbor not in g_score or tentative_g < g_score[neighbor]:
-                    g_score[neighbor] = tentative_g
-                    f_score = tentative_g + epsilon * heuristic(neighbor, goal)
-                    if neighbor not in open_set and neighbor not in closed_set:
-                        heapq.heappush(open_list, (f_score, neighbor))
-                        open_set.add(neighbor)
-                    elif neighbor in closed_set:
-                        incons.add(neighbor)
-                    came_from[neighbor] = current_node
-
-    paths = []
-    open_sets = []
-    closed_sets = []
-
-    while epsilon > 1.0:
-        improve_path()
-        epsilon = max(1.0, epsilon - epsilon_decay)
-        for state in incons:
-            heapq.heappush(open_list, (g_score[state] + epsilon * heuristic(state, goal), state))
-            open_set.add(state)
-        incons.clear()
-
-        if g_score[goal] < float('inf'):
+        if g_scores[goal] < float('inf'):
             path = []
-            current = goal
-            while current in came_from:
-                path.append(current)
-                current = came_from[current]
-            path.append(start)
+            path_cost = current_node.g_score
+            while current_node != start:
+                path.append(current_node.state)
+                current_node = current_node.parent
+            path.append(start.state)
             path.reverse()
-            paths.append(path)
-            open_sets.append(set(open_set))
-            closed_sets.append(set(closed_set))
+            if path_cost < best_cost:
+                best_path = path
+                best_cost = path_cost
+        weight = max(1, weight - epsilon)
+        for node in incons_set:
+            open_list.push((node), g_scores[node.state] + weight * h(node.state, goal))
+            open_set.add(node.state)
+        incons_set.clear()
+        closed_set.clear()
+    
+    return best_path, open_set, closed_set, best_cost
 
-    return paths[-1] if paths else None, open_sets[-1] if open_sets else set(), closed_sets[-1] if closed_sets else set()
+def improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set):
+    print("here")
+    current_node = None
+    while not open_list.isEmpty() and g_scores[goal]>open_list.peek()[0]:
+        current_node = open_list.pop()
+        closed_set.add(current_node.state)
+        open_set.remove(current_node.state)
+
+        for neighbor in current_node.expand_node(grid):
+            g_score = neighbor.g_score
+            
+            if neighbor.state not in closed_set or g_score < g_scores[neighbor.state]:
+                g_scores[neighbor.state] = g_score
+                f_score = g_score + weight * h(neighbor.state, goal)
+                open_list.update((neighbor), f_score)
+                open_set.add(neighbor.state)
+                
+                if neighbor.state in closed_set:
+                    incons_set.add(neighbor)
+    
+    return current_node
 
 if __name__ == "__main__":
     width, height = 20, 20
-    grid = Gridworld(width, height, 0.3, 10, connectivity=8)
-
-    start = (0, 0)
+    grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
+    
+    start = Util.Node((0, 0), None, 0)
     goal = (height - 1, width - 1)
+    weight = 10
+    epsilon = 1
+    h = heu.heuristic_manhattan
+    time = 10
 
-    while not grid.is_traversable(*start) or not grid.is_traversable(*goal):
-        grid = Gridworld(width, height, 0.3, 10, connectivity=8)
-
-    path, open_set, closed_set = ara_star(grid, start, goal, heuristic=heuristic_manhattan)
-
-    if path:
-        print("Path found:", path)
-        grid.draw_grid(path=path, start=start, goal=goal, open_list=open_set, closed_list=closed_set)
+    while not grid.path_exists(start, goal):
+        grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
+    
+    best_path, best_open, best_close, best_cost = ARA_star(grid, start, goal, h, weight, epsilon, time)
+    
+    if best_path:
+        print("Best Path Found:", best_path)
+        print("Path Cost:", best_cost)
+        grid.draw_grid(best_path, start.state, goal, best_open, best_close)
     else:
-        print("No path found!")
+        print("No path found")
+        grid.draw_grid(best_path, start.state, goal, best_open, best_close)
