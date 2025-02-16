@@ -1,6 +1,7 @@
 import math
 import Util
 import Astar
+import heuristics as heu
 
 def anytime_A_star(grid, start, goal, h, weight, epsilon, time):
     best_path = None
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     goal = (height - 1, width - 1)
     weight = 10
     epsilon = 1
-    h = Astar.heuristic_manhattan
+    h = heu.heuristic_manhattan
     time = 10
 
     while not grid.path_exists(start, goal):

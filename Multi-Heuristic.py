@@ -1,19 +1,6 @@
 import Util
 import math
-
-def heuristic_manhattan(node, goal):
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
-
-def heuristic_euclidean(node, goal):
-    return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
-
-def heuristic_chebyshev(node, goal):
-    return max(abs(node[0] - goal[0]), abs(node[1] - goal[1]))
-
-def heuristic_octile(node, goal):
-    dx = abs(node[0] - goal[0])
-    dy = abs(node[1] - goal[1])
-    return (dx + dy) + (math.sqrt(2) - 2) * min(dx, dy)
+import heuristics as heu
 
 def imha_star(grid, start, goal, heuristics, w1, w2):
     """
@@ -121,7 +108,7 @@ def run_search():
     start = Util.Node((0, 0), None, 0)
     grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
     goal = (height - 1, width - 1)
-    heuristics = [heuristic_manhattan, heuristic_euclidean, heuristic_chebyshev, heuristic_octile]
+    heuristics = [heu.heuristic_manhattan, heu.heuristic_euclidean, heu.heuristic_chebyshev, heu.heuristic_octile]
 
     while not grid.path_exists(start, goal):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)

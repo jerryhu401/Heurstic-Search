@@ -1,11 +1,6 @@
 import Util
 import math
-
-def heuristic_manhattan(node, goal):
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
-
-def heuristic_euclidean(node, goal):
-    return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
+import heuristics as heu
 
 def linear(C, h_n, g_n):
     if h_n == 0:
@@ -66,7 +61,7 @@ if __name__ == "__main__":
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     cost_model = "linear_relative" 
-    path, open_set, closed_set, C = potential_search(grid, start, goal, budget, linear, heuristic_manhattan)
+    path, open_set, closed_set, C = potential_search(grid, start, goal, budget, linear, heu.heuristic_manhattan)
 
     if path:
         print(f"Path found with cost {C}:", path)

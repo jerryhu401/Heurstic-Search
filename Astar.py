@@ -1,11 +1,6 @@
 import Util
 import math
-
-def heuristic_manhattan(node, goal):
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
-
-def heuristic_euclidean(node, goal):
-    return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
+import heuristics as heu
 
 def A_star(grid, start, goal, h, weight):
     open_list = Util.PQ()
@@ -52,7 +47,7 @@ if __name__ == "__main__":
     while not grid.path_exists(start, goal):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
-    path, open_set, closed_set, C = A_star(grid, start, goal, heuristic_manhattan, weight)
+    path, open_set, closed_set, C = A_star(grid, start, goal, heu.heuristic_manhattan, weight)
 
     if path:
         print(f"Path found:", path)

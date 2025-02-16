@@ -1,6 +1,7 @@
 import math
 import Util
 import potential as pt
+import heuristics as heu
 
 def anytime_potential_search(grid, start, goal, initial_budget, cost_model, h, epsilon, time):
     best_path = None
@@ -38,7 +39,7 @@ if __name__ == "__main__":
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     cost_model = pt.linear  # Using the linear cost model
-    best_path, best_open, best_close, best_cost = anytime_potential_search(grid, start, goal, initial_budget, cost_model, pt.heuristic_manhattan, e, time)
+    best_path, best_open, best_close, best_cost = anytime_potential_search(grid, start, goal, initial_budget, cost_model, heu.heuristic_manhattan, e, time)
 
     if best_path:
         print("Best Path Found:", best_path)
