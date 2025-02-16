@@ -1,4 +1,5 @@
 import heapq
+import logging
 
 class PQ:
     def __init__(self):
@@ -6,6 +7,13 @@ class PQ:
         self.count = 0
         self.entry_finder = {}
         self.REMOVED = '<removed-task>' 
+        self.log_filename = "queue_log.txt"
+
+        logging.basicConfig(
+            filename=self.log_filename,
+            level=logging.INFO,
+            format="%(asctime)s - %(message)s"
+        )
 
     def peek(self):
         return self.heap[0]
@@ -40,3 +48,11 @@ class PQ:
                 PQ.push(self, item, priority)
         else:
             PQ.push(self, item, priority)
+
+    def log_queue(self):
+        queue_elements = {entry[2] for entry in self.heap if entry[2] != self.REMOVED}
+        
+        with open(self.log_filename, "a") as log_file:
+            log_file.write(f"Current Queue Set: {queue_elements}\n")
+        
+        logging.info(f"Priority queue contents logged as set: {queue_elements}")
