@@ -43,6 +43,7 @@ def A_star(grid, start, goal, h, weight):
 
 if __name__ == "__main__":
     width, height = 20, 20
+    weight = 1
     grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     start = Util.Node((0, 0),None,0)
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     while not grid.path_exists(start, goal):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
-    path, open_set, closed_set, C = A_star(grid, start, goal, heuristic_manhattan, 1)
+    path, open_set, closed_set, C = A_star(grid, start, goal, heuristic_manhattan, weight)
 
     if path:
         print(f"Path found:", path)
