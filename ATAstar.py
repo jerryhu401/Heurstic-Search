@@ -1,24 +1,24 @@
 import math
 import Util
-import potential as pt
+import Astar
 
-def anytime_potential_search(grid, start, goal, initial_budget, cost_model, h, epsilon, time):
+def anytime_A_star(grid, start, goal, h, weight, epsilon, time):
     best_path = None
     best_cost = math.inf
     best_open = None
     best_close = None
-    budget = initial_budget
 
-    while budget > 0 and time > 0:
+    while weight >= 1 and time > 0:
         time -= 1
-        path, open_set, closed_set, path_cost = pt.potential_search(grid, start, goal, budget, cost_model, h)
+        path, open_set, closed_set, path_cost = Astar.A_star(grid, start, goal, h, weight)
 
-        if path is not None and path_cost < best_cost:
-            best_path = path
-            best_cost = path_cost
-            best_open = open_set
-            best_close = closed_set
-            budget = path_cost - epsilon 
+        if path is not None:
+            if path_cost < best_cost:
+                best_path = path
+                best_cost = path_cost
+                best_open = open_set
+                best_close = closed_set
+            weight = max(1, weight - epsilon) 
         else:
             break 
 
@@ -30,15 +30,15 @@ if __name__ == "__main__":
 
     start = Util.Node((0, 0), None, 0)
     goal = (height - 1, width - 1)
-    initial_budget = 200
-    time = 500
-    e = 10
+    weight = 10
+    epsilon = 1
+    h = Astar.heuristic_manhattan
+    time = 10
 
     while not grid.path_exists(start, goal):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
-    cost_model = pt.linear  # Using the linear cost model
-    best_path, best_open, best_close, best_cost = anytime_potential_search(grid, start, goal, initial_budget, cost_model, pt.heuristic_manhattan, e, time)
+    best_path, best_open, best_close, best_cost = anytime_A_star(grid, start, goal, h, weight, epsilon, time)
 
     if best_path:
         print("Best Path Found:", best_path)
