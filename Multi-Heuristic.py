@@ -1,32 +1,5 @@
-import PQ
-import Grid
+import Util
 import math
-
-class Node:
-    def __init__(self, state, parent, g_score):
-        self.state = state
-        self.parent = parent
-        self.g_score = g_score
-
-    def __hash__(self):
-        return hash(self.state)
-
-    def __eq__(self, other):
-        return self.state == other.state
-
-    def expand_node(self, grid):
-        x, y = self.state
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        if grid.connectivity == 8:
-            directions.extend([(-1, -1), (-1, 1), (1, -1), (1, 1)]) 
-
-        result = []
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if grid.is_traversable(nx, ny):
-                result.append(Node((nx, ny), self, self.g_score + grid.grid[x][y]))
-
-        return result
 
 def heuristic_manhattan(node, goal):
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
@@ -47,7 +20,7 @@ def imha_star(grid, start, goal, heuristics, w1, w2):
     Independent Multi-Heuristic A*
     Each heuristic maintains its own independent search with its own g-values.
     """
-    open = [PQ.PQ() for _ in range(len(heuristics))]  # n+1 priority queues
+    open = [Util.PQ() for _ in range(len(heuristics))]  # n+1 priority queues
     open_sets = [set([start.state]) for _ in range(len(heuristics))]
     closed_set = [set() for _ in range(len(heuristics))]
     
@@ -86,7 +59,7 @@ def imha_star(grid, start, goal, heuristics, w1, w2):
     return None, open_sets[0], closed_set[0]
 
 def smha_star(grid, start, goal, heuristics, w1, w2):
-    open = [PQ.PQ() for _ in range(len(heuristics))]  # n+1 priority queues
+    open = [Util.PQ() for _ in range(len(heuristics))]  # n+1 priority queues
     open_sets = [set([start.state]) for _ in range(len(heuristics))]
     closed_anchor = set()
     closed_inad = set()
@@ -145,13 +118,13 @@ def reconstruct_path(current, start, goal):
 
 def run_search():
     width, height = 20, 20
-    start = Node((0, 0), None, 0)
-    grid = Grid.Gridworld(width, height, 0.3, 10, connectivity=8)
+    start = Util.Node((0, 0), None, 0)
+    grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
     goal = (height - 1, width - 1)
     heuristics = [heuristic_manhattan, heuristic_euclidean, heuristic_chebyshev, heuristic_octile]
 
     while not grid.path_exists(start, goal):
-        grid = Grid.Gridworld(width, height, 0.3, 10, connectivity=8)
+        grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
     
     path, open_set, closed_set = smha_star(grid, start, goal, heuristics, 3, 3)
     if path:
