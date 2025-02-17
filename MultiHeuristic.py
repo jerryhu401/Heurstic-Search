@@ -18,7 +18,7 @@ def imha_star(grid, start, goal, heuristics, weights):
                 open_sets[i].remove(current.state)
                 closed_set[i].add(current.state)
                 if current.state == goal:
-                    return reconstruct_path(current, start, goal), open_sets[i], closed_set[i]
+                    return reconstruct_path(current, start, goal), open_sets[i], closed_set[i], current.g_score
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_set[i]:
@@ -31,7 +31,7 @@ def imha_star(grid, start, goal, heuristics, weights):
                 open_sets[0].remove(current.state)
                 closed_set[0].add(current.state)
                 if current.state == goal:
-                    return reconstruct_path(current, start.state, goal), open_sets[0], closed_set[0]
+                    return reconstruct_path(current, start.state, goal), open_sets[0], closed_set[0], current.g_score
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_set[0]:
@@ -40,7 +40,7 @@ def imha_star(grid, start, goal, heuristics, weights):
                         open[0].update((neighbor), f)
                         open_sets[0].add(neighbor.state)
     
-    return None, open_sets[0], closed_set[0]
+    return None, open_sets[0], closed_set[0], None
 
 def smha_star(grid, start, goal, heuristics, weights):
     w1, w2 = weights
@@ -59,7 +59,7 @@ def smha_star(grid, start, goal, heuristics, weights):
                 open_sets[i].remove(current.state)
                 closed_inad.add(current.state)
                 if current.state == goal:
-                    return reconstruct_path(current, start, goal), open_sets[i], closed_inad
+                    return reconstruct_path(current, start, goal), open_sets[i], closed_inad, current.g_score
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_anchor:
@@ -76,7 +76,7 @@ def smha_star(grid, start, goal, heuristics, weights):
                 open_sets[0].remove(current.state)
                 closed_anchor.add(current.state)
                 if current.state == goal:
-                    return reconstruct_path(current, start.state, goal), open_sets[0], closed_anchor
+                    return reconstruct_path(current, start.state, goal), open_sets[0], closed_anchor, current.g_score
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_anchor:
@@ -89,7 +89,7 @@ def smha_star(grid, start, goal, heuristics, weights):
                                 open[i].update((neighbor), f)
                                 open_sets[i].add(neighbor.state)
     
-    return None, open_sets[0], closed_anchor
+    return None, open_sets[0], closed_anchor, None
 
 def reconstruct_path(current, start, goal):
     """Reconstructs the path from start to goal."""
@@ -112,9 +112,9 @@ def run_search():
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
     
     weights = (3,3)
-    path, open_set, closed_set = smha_star(grid, start, goal, heuristics, weights)
+    path, open_set, closed_set, path_cost = smha_star(grid, start, goal, heuristics, weights)
     if path:
-        print("Path found:", path)
+        print(f"Path found with cost {path_cost}:", path)
         grid.draw_grid(path=path, start=start.state, goal=goal, open_list=open_set, closed_list=closed_set)
     else:
         print("No path found")
