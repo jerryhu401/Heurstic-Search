@@ -19,6 +19,8 @@ def anytime_A_star(grid, start, goal, h, weight, epsilon, time):
                 best_cost = path_cost
                 best_open = open_set
                 best_close = closed_set
+            if weight == 1:
+                break
             weight = max(1, weight - epsilon) 
         else:
             break 
