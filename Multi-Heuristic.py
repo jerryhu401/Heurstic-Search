@@ -22,7 +22,7 @@ def imha_star(grid, start, goal, heuristics, weights):
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_set[i]:
-                        h_score = heuristics[i](neighbor.state, goal)
+                        h_score = w1*heuristics[i](neighbor.state, goal)
                         f = h_score + g
                         open[i].update((neighbor), f)
                         open_sets[i].add(neighbor.state)
@@ -35,7 +35,7 @@ def imha_star(grid, start, goal, heuristics, weights):
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_set[0]:
-                        h_score = heuristics[0](neighbor.state, goal)
+                        h_score = w1*heuristics[0](neighbor.state, goal)
                         f = h_score + g
                         open[0].update((neighbor), f)
                         open_sets[0].add(neighbor.state)
@@ -63,7 +63,7 @@ def smha_star(grid, start, goal, heuristics, weights):
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_anchor:
-                        h_score = heuristics[i](neighbor.state, goal)
+                        h_score = w1*heuristics[i](neighbor.state, goal)
                         f = h_score + g
                         open[0].update((neighbor), f)
                         open_sets[0].add(neighbor.state)
@@ -80,7 +80,7 @@ def smha_star(grid, start, goal, heuristics, weights):
                 for neighbor in current.expand_node(grid):
                     g = neighbor.g_score
                     if neighbor.state not in closed_anchor:
-                        h_score = heuristics[i](neighbor.state, goal)
+                        h_score = w1*heuristics[i](neighbor.state, goal)
                         f = h_score + g
                         open[0].update((neighbor), f)
                         open_sets[0].add(neighbor.state)
