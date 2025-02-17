@@ -15,17 +15,16 @@ def ARA_star(grid, start, goal, h, weight, epsilon, time):
     g_scores[goal] = float('inf')
 
     while weight >= 1 and time > 0:
-        print(time)
         time -= 1
         path, path_cost = improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set)
         if path != None:
             if path_cost < best_cost:
                 best_path = path
                 best_cost = path_cost
+        weight = max(1, weight - epsilon)
         for node in incons_set:
             open_list.update((node), g_scores[node.state] + weight * h(node.state, goal))
             open_set.add(node.state)
-        weight = max(1, weight - epsilon)
         incons_set.clear()
         closed_set.clear()
     

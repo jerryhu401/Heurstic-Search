@@ -2,11 +2,8 @@ import Util
 import math
 import heuristics as heu
 
-def imha_star(grid, start, goal, heuristics, w1, w2):
-    """
-    Independent Multi-Heuristic A*
-    Each heuristic maintains its own independent search with its own g-values.
-    """
+def imha_star(grid, start, goal, heuristics, weights):
+    w1, w2 = weights
     open = [Util.PQ() for _ in range(len(heuristics))]  # n+1 priority queues
     open_sets = [set([start.state]) for _ in range(len(heuristics))]
     closed_set = [set() for _ in range(len(heuristics))]
@@ -45,7 +42,8 @@ def imha_star(grid, start, goal, heuristics, w1, w2):
     
     return None, open_sets[0], closed_set[0]
 
-def smha_star(grid, start, goal, heuristics, w1, w2):
+def smha_star(grid, start, goal, heuristics, weights):
+    w1, w2 = weights
     open = [Util.PQ() for _ in range(len(heuristics))]  # n+1 priority queues
     open_sets = [set([start.state]) for _ in range(len(heuristics))]
     closed_anchor = set()
@@ -113,7 +111,8 @@ def run_search():
     while not grid.path_exists(start, goal):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
     
-    path, open_set, closed_set = smha_star(grid, start, goal, heuristics, 3, 3)
+    weights = (3,3)
+    path, open_set, closed_set = smha_star(grid, start, goal, heuristics, weights)
     if path:
         print("Path found:", path)
         grid.draw_grid(path=path, start=start.state, goal=goal, open_list=open_set, closed_list=closed_set)
