@@ -1,6 +1,5 @@
 import math
 import Util
-import MultiHeuristic as MH
 import heuristics as heu
 
 def heuristic_search_single(grid, start, goal, priority, weights):
@@ -27,7 +26,7 @@ def heuristic_search_single(grid, start, goal, priority, weights):
 
 def heuristic_search_multi(grid, start, goal, priorities, weights):
     w1, w2, budget = weights
-    open = [Util.PQ() for _ in range(len(priorities))]  # n+1 priority queues
+    open = [Util.PQ() for _ in range(len(priorities))]
     open_sets = [set([start.state]) for _ in range(len(priorities))]
     closed_anchor = set()
     closed_inad = set()
