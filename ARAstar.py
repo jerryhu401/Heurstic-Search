@@ -15,12 +15,29 @@ def ARA_star(grid, start, goal, h, weight, epsilon, time):
     g_scores[goal] = float('inf')
 
     while weight >= 1 and time > 0:
+        print(time)
         time -= 1
-        current_node = improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set)
-        if current_node == None:
-            break
+        path, path_cost = improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set)
+        if path != None:
+            if path_cost < best_cost:
+                best_path = path
+                best_cost = path_cost
+        for node in incons_set:
+            open_list.update((node), g_scores[node.state] + weight * h(node.state, goal))
+            open_set.add(node.state)
+        weight = max(1, weight - epsilon)
+        incons_set.clear()
+        closed_set.clear()
+    
+    return best_path, open_set, closed_set, best_cost
 
-        if g_scores[goal] < float('inf'):
+def improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set):
+    while not open_list.isEmpty():
+        current_node = open_list.pop()
+        closed_set.add(current_node.state)
+        open_set.remove(current_node.state)
+        
+        if g_scores[goal] <= current_node.g_score:
             path = []
             path_cost = current_node.g_score
             while current_node != start:
@@ -28,39 +45,21 @@ def ARA_star(grid, start, goal, h, weight, epsilon, time):
                 current_node = current_node.parent
             path.append(start.state)
             path.reverse()
-            if path_cost < best_cost:
-                best_path = path
-                best_cost = path_cost
-        weight = max(1, weight - epsilon)
-        for node in incons_set:
-            open_list.push((node), g_scores[node.state] + weight * h(node.state, goal))
-            open_set.add(node.state)
-        incons_set.clear()
-        closed_set.clear()
-    
-    return best_path, open_set, closed_set, best_cost
-
-def improved_A_star(grid, start, goal, h, weight, open_list, g_scores, closed_set, incons_set, open_set):
-    print("here")
-    current_node = None
-    while not open_list.isEmpty() and g_scores[goal]>open_list.peek()[0]:
-        current_node = open_list.pop()
-        closed_set.add(current_node.state)
-        open_set.remove(current_node.state)
+            return path, path_cost
 
         for neighbor in current_node.expand_node(grid):
             g_score = neighbor.g_score
             
-            if neighbor.state not in closed_set or g_score < g_scores[neighbor.state]:
+            if g_score < g_scores.get(neighbor.state, math.inf):
                 g_scores[neighbor.state] = g_score
-                f_score = g_score + weight * h(neighbor.state, goal)
-                open_list.update((neighbor), f_score)
-                open_set.add(neighbor.state)
-                
-                if neighbor.state in closed_set:
+                if neighbor.state not in closed_set:
+                    f_score = g_score + weight * h(neighbor.state, goal)
+                    open_list.update((neighbor), f_score)
+                    open_set.add(neighbor.state)
+                else:
                     incons_set.add(neighbor)
     
-    return current_node
+    return None, None
 
 if __name__ == "__main__":
     width, height = 20, 20
