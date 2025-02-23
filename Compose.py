@@ -3,6 +3,76 @@ import Util
 import heuristics as heu
 import Priority as P
 
+def improve_path(grid, goal, priority, open_set, g_scores):
+    open = Util.PQ()
+    closed = set()
+    incons = set()
+    for node in open_set:
+        open.push((node), priority(node))
+        g_scores[node.state] = node.g_score
+    
+    while not open.isEmpty() and g_scores[goal] > open.peek()[0]:
+        current = open.pop()
+        open_set.remove(current)
+        closed.add(current.state)
+        
+        for neighbor in current.expand_node(grid):
+            g_score = neighbor.g_score
+            
+            if g_score < g_scores.get(neighbor.state, math.inf):
+                g_scores[neighbor.state] = g_score
+                if neighbor.state not in closed:
+                    open.update((neighbor), priority(neighbor))
+                    open_set.add(neighbor)
+                else:
+                    incons.add(neighbor)
+    
+    res = None
+    if g_scores[goal] == open.peek()[0]:
+        res = open.peek()[2]
+
+    return open_set, closed, incons, res
+
+
+def ARA(grid, start, goal, heuristics):
+    best_path = None
+    best_cost = math.inf
+    best_open = None
+    best_close = None
+    S = None
+
+    g_scores = {}
+    g_scores[goal] = math.inf
+    open = set()
+    open.add(start)
+    
+    if len(heuristics) > 1:
+        S = heuristic_search_multi
+        h = heuristics
+    else:
+        S = heuristic_search_single
+        h = heuristics[0]
+
+    while heuristics[0].valid():
+        open_set, closed_set, incons_set, node = improve_path(grid, goal, h, open, g_scores)
+
+        open = open_set | incons_set
+        if node != None:
+            if g_scores[goal] < best_cost:
+                path_cost = g_scores[goal]
+                best_path = reconstruct_path(node, start)
+                best_cost = path_cost
+                best_open = open_set
+                best_close = closed_set
+            for p in heuristics:
+                p.update(path_cost)
+        else:
+            break 
+    
+    best_open = [curr.state for curr in best_open]
+
+    return best_path, best_open, best_close, best_cost
+
 def heuristic_search_single(grid, start, goal, priority):
     open = Util.PQ()
     open_set = set([start.state])
@@ -67,7 +137,7 @@ def heuristic_search_multi(grid, start, goal, priorities):
     
     return None, open_sets[0], closed_anchor, None
 
-def reconstruct_path(current, start, goal):
+def reconstruct_path(current, start):
     path = []
     while current != start:
         path.append(current.state)
@@ -156,7 +226,9 @@ if __name__ == "__main__":
     #res = search(grid, start, goal.state, [anytimePotentials[0]])
     
     #anytime multi heuristic potential search
-    res = search(grid, start, goal.state, anytimePotentials)
+    #res = search(grid, start, goal.state, anytimePotentials)
+
+    res = ARA(grid, start, goal.state, [anytimeP[0]])
     
     
     best_path, best_open, best_close, best_cost = res
