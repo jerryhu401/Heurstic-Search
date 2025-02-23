@@ -12,7 +12,7 @@ class PQ:
         self.REMOVED = '<removed-task>' 
         self.log_filename = "queue_log.txt"
 
-        open(self.log_filename, "w").close()
+        open(self.log_filename, "w").close() #wipes content
 
         logging.basicConfig(
             filename=self.log_filename,
@@ -63,10 +63,11 @@ class PQ:
         logging.info(f"Priority queue contents logged as set: {queue_elements}")
 
 class Node:
-    def __init__(self, state, parent, g_score):
+    def __init__(self, state, parent, g_score, goal):
         self.state = state
         self.parent = parent
         self.g_score = g_score
+        self.goal = goal
 
     def __hash__(self):
         return hash(self.state)
@@ -87,7 +88,7 @@ class Node:
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
             if grid.is_traversable(nx, ny):
-                result.append(Node((nx, ny), self, self.g_score + grid.grid[x][y]))
+                result.append(Node((nx, ny), self, self.g_score + grid.grid[x][y], self.goal))
 
         return result
 
