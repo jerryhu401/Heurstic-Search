@@ -33,12 +33,72 @@ def improve_path(grid, goal, priority, open_set, g_scores):
 
     return open_set, closed, incons, res
 
+def improve_path_multi(grid, goal, priority, open_set, g_scores):
+    open = [Util.PQ() for _ in range(len(priorities))]
+    open_sets = [set() for _ in range(len(priorities))]
+    closed_anchor = set()
+    closed_inad = set()
+    incons_anchor = set()
+    incons_inad = set()
+    for node in open_set:
+        for i in range(len(priorities)):
+            open[i].push((node), priority[i](node))
+            open_sets[i].add(node)
+        g_scores[node.state] = node.g_score
+    
+    while not open[0].isEmpty():
+        for i in range(1, len(priorities)):
+            if not open[i].isEmpty() and open[i].peek()[0] <= priorities[0].w2 * open[0].peek()[0]:
+                if g_scores[goal] == open[i].peek()[0]:
+                    return open_sets[i], closed_inad, incons_inad, open[i].peek()[2]
+                current = open[i].pop()
+                open_sets[i].remove(current)
+                closed_inad.add(current.state)
+                for neighbor in current.expand_node(grid):
+                    g_score = neighbor.g_score
+                    if g_score < g_scores.get(neighbor.state, math.inf):
+                        g_scores[neighbor.state] = g_score
+                        if neighbor.state not in closed_anchor:
+                            open[0].update((neighbor), priorities[i](neighbor))
+                            open_sets[0].add(neighbor)
+                            if neighbor.state not in closed_inad:
+                                for i in range(1, len(priorities)):
+                                    open[i].update((neighbor), priorities[i](neighbor))
+                                    open_sets[i].add(neighbor)
+                            else:
+                                incons_inad.add(neighbor)
+                        else:
+                            incons_inad.add(neighbor)
+            else:
+                if g_scores[goal] == open[0].peek()[0]:
+                    return open_sets[0], closed_anchor, incons_anchor, open[0].peek()[2]
+                current = open[0].pop()
+                open_sets[0].remove(current)
+                closed_anchor.add(current.state)
+                for neighbor in current.expand_node(grid):
+                    g_score = neighbor.g_score
+                    if g_score < g_scores.get(neighbor.state, math.inf):
+                        g_scores[neighbor.state] = g_score
+                        if neighbor.state not in closed_anchor:
+                            open[0].update((neighbor), priorities[i](neighbor))
+                            open_sets[0].add(neighbor)
+                            if neighbor.state not in closed_inad:
+                                for i in range(1, len(priorities)):
+                                    open[i].update((neighbor), priorities[i](neighbor))
+                                    open_sets[i].add(neighbor)
+                            else:
+                                incons_inad.add(neighbor)
+                        else:
+                            incons_inad.add(neighbor)
+    
+    return open_sets[0], closed_anchor, incons_anchor, None
+
 
 def ARA(grid, start, goal, heuristics):
     best_path = None
     best_cost = math.inf
-    best_open = None
-    best_close = None
+    best_open = set()
+    best_close = set()
     S = None
 
     g_scores = {}
@@ -47,19 +107,21 @@ def ARA(grid, start, goal, heuristics):
     open.add(start)
     
     if len(heuristics) > 1:
-        S = heuristic_search_multi
+        improve = improve_path_multi
         h = heuristics
     else:
-        S = heuristic_search_single
+        improve = improve_path
         h = heuristics[0]
 
     while heuristics[0].valid():
-        open_set, closed_set, incons_set, node = improve_path(grid, goal, h, open, g_scores)
+        open_set, closed_set, incons_set, node = improve(grid, goal, h, open, g_scores)
 
         open = open_set | incons_set
-        if node != None:
+        if node != None and node.state == goal:
             if g_scores[goal] < best_cost:
                 path_cost = g_scores[goal]
+                print(node)
+                print(start)
                 best_path = reconstruct_path(node, start)
                 best_cost = path_cost
                 best_open = open_set
@@ -204,7 +266,7 @@ if __name__ == "__main__":
         anytimePotentials.append(p4)
 
 
-    while not grid.path_exists(start, goal.state):
+    while not (grid.path_exists(start, goal.state) and grid.is_traversable(*(start.state)) and grid.is_traversable(*(goal.state))):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     #weighted astar
@@ -228,7 +290,9 @@ if __name__ == "__main__":
     #anytime multi heuristic potential search
     #res = search(grid, start, goal.state, anytimePotentials)
 
-    res = ARA(grid, start, goal.state, [anytimeP[0]])
+    #res = ARA(grid, start, goal.state, [anytimeP[0]])
+    
+    res = ARA(grid, start, goal.state, anytimeP)
     
     
     best_path, best_open, best_close, best_cost = res
