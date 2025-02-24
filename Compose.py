@@ -290,9 +290,9 @@ if __name__ == "__main__":
     #anytime multi heuristic potential search
     #res = search(grid, start, goal.state, anytimePotentials)
 
-    #res = ARA(grid, start, goal.state, [anytimeP[0]])
+    res = ARA(grid, start, goal.state, [anytimeP[0]])
     
-    res = ARA(grid, start, goal.state, anytimeP)
+    #res = ARA(grid, start, goal.state, anytimeP)
     
     
     best_path, best_open, best_close, best_cost = res
