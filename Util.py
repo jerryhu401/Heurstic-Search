@@ -131,15 +131,9 @@ class Gridworld:
         if path:
             self.log(path, "Path:")
             for (x, y) in path:
-                if (x, y) != start and (x, y) != goal:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, edgecolor='red', facecolor='none', linewidth=2))
-                elif (x, y) == start:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='orange', alpha=1))
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, edgecolor='red', facecolor='none', linewidth=2))
-                else:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='orange', alpha=1))
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, edgecolor='red', facecolor='none', linewidth=2))
-        
+                path_x = [x for x, y in path]
+                path_y = [y for x, y in path]
+                ax.plot(path_y, path_x, color='red', linewidth=2, marker='o', markersize=5, markerfacecolor='red')
         ax.set_xticks([])
         ax.set_yticks([])
         ax.axis('off')

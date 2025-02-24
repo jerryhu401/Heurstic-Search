@@ -134,7 +134,7 @@ def reconstruct_path(current, start):
     return path
 
 if __name__ == "__main__":
-    width, height = 50, 50
+    width, height = 20, 20
     grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     goal = Util.Node((height - 1, width - 1), None, math.inf, None)
