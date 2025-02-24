@@ -22,7 +22,12 @@ class PQ:
         )
 
     def peek(self):
-        return self.heap[0]
+        while self.heap:
+            priority, count, task = self.heap[0]
+            if task is not self.REMOVED:
+                return priority, count, task
+            heapq.heappop(self.heap)
+        return None
 
     def isEmpty(self):
         return self.size == 0
@@ -34,6 +39,15 @@ class PQ:
         self.count += 1
         self.size += 1
 
+    def getMin(self):
+        while self.heap:
+            priority, count, item = heapq.heappop(self.heap)
+            if item is not self.REMOVED:
+                del self.entry_finder[item]
+                self.size -= 1
+                return priority, count, item
+        raise KeyError('pop from an empty priority queue')
+    
     def pop(self):
         while self.heap:
             priority, count, item = heapq.heappop(self.heap)

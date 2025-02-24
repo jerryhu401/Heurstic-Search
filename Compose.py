@@ -164,10 +164,11 @@ if __name__ == "__main__":
     while not (grid.path_exists(start, goal.state) and grid.is_traversable(*(start.state)) and grid.is_traversable(*(goal.state))):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
+    #anytime
     #res = ARA(grid, start, goal.state, [anytimeP[0]])
-    
+    #anytime multi heuristic
     res = ARA(grid, start, goal.state, anytimeP)
-    
+    #potential
     
     best_path, best_open, best_close, best_cost = res
 
