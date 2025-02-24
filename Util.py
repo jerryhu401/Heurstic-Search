@@ -99,7 +99,7 @@ class Gridworld:
         self.height = height
         self.grid = np.random.randint(1, max_cost + 1, (height, width))
         self.connectivity = connectivity
-        self.grid[np.random.rand(height, width) < obstacle_prob] = 11
+        self.grid[np.random.rand(height, width) < obstacle_prob] = 0
         self.log_filename = "grid_log.txt"
 
         open(self.log_filename, "w").close()
@@ -114,30 +114,31 @@ class Gridworld:
         return 0 <= x < self.height and 0 <= y < self.width
     
     def is_traversable(self, x, y):
-        return self.is_within_bounds(x, y) and self.grid[x, y] != 11
+        return self.is_within_bounds(x, y) and self.grid[x, y] != 0
 
     def draw_grid(self, path=None, start=None, goal=None, open_list=None, closed_list=None):
         fig, ax = plt.subplots(figsize=(10, 10))
         grid_display = np.copy(self.grid).astype(float)
         
-        # Define colormap with 11 colors, reserving the darkest for obstacles
-        colors = plt.cm.copper(np.linspace(1, 0, 11))
+        colors = plt.cm.viridis(np.linspace(1, 0, 11))
+        colors[0] = [0, 0, 0, 1]
         cmap = mcolors.ListedColormap(colors)
-        bounds = np.linspace(1, np.max(self.grid), 11)  # Ensure correct mapping
+        bounds = np.linspace(0, np.max(self.grid), 11)
         norm = mcolors.BoundaryNorm(bounds, cmap.N)
         
         img = ax.imshow(grid_display, cmap=cmap, norm=norm)
         
-        # Overlay path, start, and goal with distinct colors
         if path:
             self.log(path, "Path:")
             for (x, y) in path:
                 if (x, y) != start and (x, y) != goal:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='green', alpha=0.75))
+                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, edgecolor='red', facecolor='none', linewidth=2))
                 elif (x, y) == start:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='blue', alpha=0.5))
+                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='orange', alpha=1))
+                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, edgecolor='red', facecolor='none', linewidth=2))
                 else:
-                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='red', alpha=0.5))
+                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color='orange', alpha=1))
+                    ax.add_patch(plt.Rectangle((y - 0.5, x - 0.5), 1, 1, edgecolor='red', facecolor='none', linewidth=2))
         
         ax.set_xticks([])
         ax.set_yticks([])
