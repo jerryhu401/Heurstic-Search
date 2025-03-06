@@ -4,7 +4,31 @@ import numpy as np
 import logging
 import heapq
 
+
+
+
 class PQ:
+    def __init__(self):
+        self.queue = []
+        self.count = 0
+
+    def push(self, node, priority):
+        heapq.heappush(self.queue, (priority, self.count, node))
+        self.count += 1
+
+    def peek(self):
+        return self.queue[0]
+    
+    def pop(self):
+        return heapq.heappop(self.queue)[-1]
+
+    def isEmpty(self):
+        return len(self.queue) == 0
+
+
+
+
+class PQWithUpdate:
     def __init__(self):
         self.heap = []
         self.count = 0
@@ -38,15 +62,6 @@ class PQ:
         self.entry_finder[item] = entry
         self.count += 1
         self.size += 1
-
-    def getMin(self):
-        while self.heap:
-            priority, count, item = heapq.heappop(self.heap)
-            if item is not self.REMOVED:
-                del self.entry_finder[item]
-                self.size -= 1
-                return priority, count, item
-        raise KeyError('pop from an empty priority queue')
     
     def pop(self):
         while self.heap:
@@ -65,9 +80,9 @@ class PQ:
                 entry = self.entry_finder.pop(i)
                 entry[-1] = self.REMOVED
                 self.size -= 1
-                PQ.push(self, item, priority)
+                PQWithUpdate.push(self, item, priority)
         else:
-            PQ.push(self, item, priority)
+            PQWithUpdate.push(self, item, priority)
 
     def log_queue(self):
         queue_elements = {entry[2] for entry in self.heap if entry[2] != self.REMOVED}
@@ -92,6 +107,12 @@ class Node:
 
     def __ne__(self, other):
         return other == None or self.state != other.state
+    
+    def __lt__(self, other):
+        return self.g_score < other.g_score
+
+    def __gt__(self, other):
+        return self.g_score > other.g_score
     
     def expand_node(self, grid):
         x, y = self.state
@@ -130,7 +151,7 @@ class Gridworld:
     def is_traversable(self, x, y):
         return self.is_within_bounds(x, y) and self.grid[x, y] != 0
 
-    def draw_grid(self, path=None, start=None, goal=None, open_list=None, closed_list=None):
+    def draw_grid(self, path=None):
         fig, ax = plt.subplots(figsize=(10, 10))
         grid_display = np.copy(self.grid).astype(float)
         
@@ -156,7 +177,7 @@ class Gridworld:
 
 
     def path_exists(self, start, goal):
-        open_list = PQ()
+        open_list = PQWithUpdate()
         open_list.push((start), 1)
         open_set = {start.state}
         closed_set = set()

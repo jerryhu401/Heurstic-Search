@@ -4,7 +4,8 @@ import heuristics as heu
 import Priority as P
 
 def improve_path(grid, goal, priority, open_set, g_scores):
-    open = Util.PQ()
+    open_set = open_set[0]
+    open = Util.PQWithUpdate()
     closed = set()
     incons = set()
     for node in open_set:
@@ -29,39 +30,44 @@ def improve_path(grid, goal, priority, open_set, g_scores):
     
     res = None
     if g_scores[goal] == open.peek()[0]:
-        res = open.peek()[2]
+        res = open.peek()[-1]
 
-    return open_set, closed, incons, res, g_scores
+    return [open_set], closed, [incons], res, g_scores
 
 def improve_path_multi(grid, goal, priority, open_set, gs):
-    open = [Util.PQ() for _ in range(len(priorities))]
-    open_sets = [set() for _ in range(len(priorities))]
+    open = [Util.PQWithUpdate() for _ in range(len(priorities))]
+    open_anchor: set[Util.Node] = open_set[0]
+    open_inad = open_set[1]
     closed_anchor = set()
     closed_inad = set()
     incons_anchor = set()
     incons_inad = set()
-    for node in open_set:
-        for i in range(len(priorities)):
+    incons = [incons_anchor, incons_inad]
+    for node in open_inad:
+        for i in range(1, len(priorities)):
             open[i].push((node), priority[i](node))
-            open_sets[i].add(node)
-        gs[0][node.state] = node.g_score
         gs[1][node.state] = node.g_score
+        open_inad.add(node)
+    for node in open_anchor:
+        open[0].push((node), priority[0](node))
+        open_anchor.add(node)
+        gs[0][node.state] = node.g_score
     
     while not open[0].isEmpty():
         for i in range(1, len(priorities)):
             if not open[i].isEmpty() and open[i].peek()[0] <= priorities[0].w2 * open[0].peek()[0]:
                 g_scores = gs[1]
-                if g_scores[goal] <= open[i].peek()[0] and open[i].peek()[2].state == goal: #why this works???
-                    return open_sets[i], closed_inad, incons_inad, open[i].peek()[2], g_scores
+                if g_scores[goal] <= open[i].peek()[0] and open[i].peek()[-1].state == goal: #why this works???
+                    return open_set, closed_inad, incons, open[i].peek()[-1], g_scores
                 current = open[i].pop()
-                open_sets[i].remove(current)
+                open_inad.remove(current)
                 closed_inad.add(current.state)
             else:
                 g_scores = gs[0]
-                if g_scores[goal] <= open[0].peek()[0] and open[i].peek()[2].state == goal:
-                    return open_sets[0], closed_anchor, incons_anchor, open[0].peek()[2], g_scores
+                if g_scores[goal] <= open[0].peek()[0] and open[i].peek()[-1].state == goal:
+                    return open_set, closed_anchor, incons, open[0].peek()[-1], g_scores
                 current = open[0].pop()
-                open_sets[0].remove(current)
+                open_anchor.remove(current)
                 closed_anchor.add(current.state)
             for neighbor in current.expand_node(grid):
                 g_score = neighbor.g_score
@@ -69,27 +75,23 @@ def improve_path_multi(grid, goal, priority, open_set, gs):
                     g_scores[neighbor.state] = g_score
                     if neighbor.state not in closed_anchor:
                         open[0].update((neighbor), priorities[i](neighbor))
-                        open_sets[0].add(neighbor)
+                        open_anchor.add(neighbor)
                         if neighbor.state not in closed_inad:
                             for i in range(1, len(priorities)):
                                 open[i].update((neighbor), priorities[i](neighbor))
-                                open_sets[i].add(neighbor)
+                            open_inad.add(neighbor)
                         else:
                             incons_inad.add(neighbor)
                     else:
-                        incons_inad.add(neighbor)
+                        incons_anchor.add(neighbor)
     
-    return open_sets[0], closed_anchor, incons_anchor, None
+    return open_anchor, closed_anchor, incons_anchor, None
 
 
 def ARA(grid, start, goal, heuristics):
     best_path = None
     best_cost = math.inf
-    best_open = set()
-    best_close = set()
-
-    open = set()
-    open.add(start)
+    res = []
     
     if len(heuristics) > 1:
         improve = improve_path_multi
@@ -98,31 +100,32 @@ def ARA(grid, start, goal, heuristics):
         g_score_anchor = {goal : math.inf}
         g_score_inad = {goal : math.inf}
         g_scores = [g_score_anchor, g_score_inad]
+        open = [set([start]) for _ in range(2)]
     else:
         improve = improve_path
         h = heuristics[0]
         g_scores = {}
         g_scores[goal] = math.inf
+        open = [set([start])]
 
     while heuristics[0].valid():
         open_set, closed_set, incons_set, node, g = improve(grid, goal, h, open, g_scores)
 
-        open = open_set | incons_set
+        for i in range(len(open_set)):
+            open[i] = open_set[i] | incons_set[i]
         if node != None:
             path_cost = g[goal]
             if g[goal] < best_cost:
                 best_path = reconstruct_path(node, start)
                 best_cost = path_cost
-                best_open = open_set
-                best_close = closed_set
+                res.append((best_path, best_cost))
             for p in heuristics:
                 p.update(path_cost)
         else:
             break 
     
-    best_open = [curr.state for curr in best_open]
 
-    return best_path, best_open, best_close, best_cost
+    return res
 
 def reconstruct_path(current, start):
     path = []
@@ -165,17 +168,17 @@ if __name__ == "__main__":
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     #anytime
-    #res = ARA(grid, start, goal.state, [anytimeP[0]])
+    res = ARA(grid, start, goal.state, [anytimeP[0]])
     #anytime multi heuristic
-    res = ARA(grid, start, goal.state, anytimeP)
+    #res = ARA(grid, start, goal.state, anytimeP)
     #potential
     
-    best_path, best_open, best_close, best_cost = res
+    best_path, best_cost = res[-1]
 
     if best_path:
         print("Best Path Found:", best_path)
         print("Path Cost:", best_cost)
-        grid.draw_grid(best_path, start.state, goal.state, best_open, best_close)
+        grid.draw_grid(best_path)
     else:
         print("No path found")
-        grid.draw_grid(best_path, start.state, goal.state, best_open, best_close)
+        grid.draw_grid(best_path)
