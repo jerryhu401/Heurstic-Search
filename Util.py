@@ -151,9 +151,14 @@ class Gridworld:
     def is_traversable(self, x, y):
         return self.is_within_bounds(x, y) and self.grid[x, y] != 0
 
-    def draw_grid(self, path=None):
-        fig, ax = plt.subplots(figsize=(10, 10))
-        grid_display = np.copy(self.grid).astype(float)
+    def draw_grid(self, paths=None, costs=None):
+        if paths is None or len(paths) == 0:
+            raise ValueError("No paths provided.")
+        
+        num_paths = len(paths)
+        fig, axes = plt.subplots(1, num_paths, figsize=(10 * num_paths, 10))
+        if num_paths == 1:
+            axes = [axes]
         
         colors = plt.cm.viridis(np.linspace(1, 0, 11))
         colors[0] = [0, 0, 0, 1]
@@ -161,18 +166,25 @@ class Gridworld:
         bounds = np.linspace(0, np.max(self.grid), 11)
         norm = mcolors.BoundaryNorm(bounds, cmap.N)
         
-        img = ax.imshow(grid_display, cmap=cmap, norm=norm)
-        
-        if path:
-            self.log(path, "Path:")
-            for (x, y) in path:
+        i = 0
+        for ax, path in zip(axes, paths):
+            cost = costs[i]
+            i += 1
+            grid_display = np.copy(self.grid).astype(float)
+            img = ax.imshow(grid_display, cmap=cmap, norm=norm)
+            
+            if path:
+                self.log(path, "Path:")
                 path_x = [x for x, y in path]
                 path_y = [y for x, y in path]
                 ax.plot(path_y, path_x, color='red', linewidth=2, marker='o', markersize=5, markerfacecolor='red')
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.axis('off')
-        plt.colorbar(img, ax=ax, label='Traversal Cost')
+            
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.axis('off')
+            ax.set_title("Path Cost: " + str(cost))
+        
+        plt.colorbar(img, ax=axes, label='Traversal Cost', orientation='vertical')
         plt.show()
 
 

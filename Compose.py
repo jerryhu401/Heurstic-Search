@@ -5,7 +5,7 @@ import Priority as P
 
 def improve_path(grid, goal, priority, open_set, g_scores):
     open_set = open_set[0]
-    open = Util.PQWithUpdate()
+    open = Util.PQ()
     closed = set()
     incons = set()
     for node in open_set:
@@ -23,7 +23,7 @@ def improve_path(grid, goal, priority, open_set, g_scores):
             if g_score < g_scores.get(neighbor.state, math.inf):
                 g_scores[neighbor.state] = g_score
                 if neighbor.state not in closed:
-                    open.update((neighbor), priority(neighbor))
+                    open.push((neighbor), priority(neighbor))
                     open_set.add(neighbor)
                 else:
                     incons.add(neighbor)
@@ -91,7 +91,8 @@ def improve_path_multi(grid, goal, priority, open_set, gs):
 def ARA(grid, start, goal, heuristics):
     best_path = None
     best_cost = math.inf
-    res = []
+    paths = []
+    costs = []
     
     if len(heuristics) > 1:
         improve = improve_path_multi
@@ -115,17 +116,19 @@ def ARA(grid, start, goal, heuristics):
             open[i] = open_set[i] | incons_set[i]
         if node != None:
             path_cost = g[goal]
+            path = reconstruct_path(node, start)
             if g[goal] < best_cost:
-                best_path = reconstruct_path(node, start)
+                best_path = path
                 best_cost = path_cost
-                res.append((best_path, best_cost))
+            paths.append(path)
+            costs.append(path_cost)
             for p in heuristics:
                 p.update(path_cost)
         else:
             break 
     
 
-    return res
+    return paths, costs
 
 def reconstruct_path(current, start):
     path = []
@@ -155,7 +158,7 @@ if __name__ == "__main__":
         p3 = P.PriorityPotential(h)
         p4 = P.PriorityPotential(h)
         p.configure(3, 3, 0, 1)
-        p2.configure(12, 12, 2, 10)
+        p2.configure(50, 12, 5, 10)
         p3.configure(3,3, 200, 0, 1)
         p4.configure(12, 12, 200, 2, 10)
         priorities.append(p)
@@ -168,17 +171,18 @@ if __name__ == "__main__":
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
     #anytime
-    res = ARA(grid, start, goal.state, [anytimeP[0]])
+    res = ARA(grid, start, goal.state, [anytimePotentials[0]])
     #anytime multi heuristic
     #res = ARA(grid, start, goal.state, anytimeP)
     #potential
     
-    best_path, best_cost = res[-1]
+    paths, costs = res
 
-    if best_path:
-        print("Best Path Found:", best_path)
-        print("Path Cost:", best_cost)
-        grid.draw_grid(best_path)
+    if len(paths)>0:
+        print("Best Path Found:", paths[-1])
+        print("Path Cost:", costs[-1])
+        print(len(paths))
+        grid.draw_grid(paths, costs)
     else:
         print("No path found")
-        grid.draw_grid(best_path)
+        grid.draw_grid(None)
