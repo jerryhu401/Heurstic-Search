@@ -41,9 +41,9 @@ if __name__ == "__main__":
 
     queue = Q.PriorityQueue(heuristics.heuristic_euclidean, start, grid)
     queues = Q.MultiQueue(h, start, grid)
+    potentialQueue = Q.PotentialQueue(heuristics.heuristic_euclidean, start, grid)
 
     res = ARA(start, queues)
-    
     
     paths, costs = res
 

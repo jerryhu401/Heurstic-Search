@@ -15,15 +15,15 @@ class PriorityQueue():
         self.goal = start.goal
         self.g_scores[self.goal.state] = math.inf
     
-    def add(self, node):
+    def add(self, node, queue):
         priority = node.g_score + self.w1 * self.heuristic(node.state, node.goal.state)
-        heapq.heappush(self.queue, (priority, node))
+        heapq.heappush(queue, (priority, node))
     
     def push(self, node):
         if node.g_score < self.g_scores.get(node.state, math.inf):
             self.g_scores[node.state] = node.g_score
             if node.state not in self.closed_set:
-                self.add(node)
+                self.add(node, self.queue)
             else:
                 self.incons_set.add(node)
 
@@ -42,11 +42,9 @@ class PriorityQueue():
         new_queue = []
         for i in range(len(self.queue)):
             node = self.queue[i][1]
-            new_priority = node.g_score + self.w1 * self.heuristic(node.state, node.goal.state)
-            heapq.heappush(new_queue, (new_priority, node))
+            self.add(node, new_queue)
         for node in self.incons_set:
-            priority = node.g_score + self.w1 * self.heuristic(node.state, node.goal.state)
-            heapq.heappush(new_queue, (priority, node))
+            self.add(node, new_queue)
         self.queue = new_queue
         self.incons_set = set()
         self.closed_set = set()
@@ -70,9 +68,6 @@ class PriorityQueue():
     
     def is_empty(self):
         return len(self.queue) == 0
-    
-    def size(self):
-        return len(self.queue)
     
 
 class MultiQueue():
@@ -118,11 +113,6 @@ class MultiQueue():
         self.w2 -= 2
         return True
     
-    def pop(self):
-        if self.is_empty():
-            raise IndexError("pop from an empty priority queue")
-        return heapq.heappop(self.queue)[1]
-    
     def peek(self):
         if self.is_empty():
             raise IndexError("peek from an empty priority queue")
@@ -136,3 +126,23 @@ class MultiQueue():
     
     def is_empty(self):
         return self.anchor_queue.is_empty()
+    
+class PotentialQueue(PriorityQueue):
+    def __init__(self, heuristic, start, grid):
+        self.budget = 150
+        super().__init__(heuristic, start, grid)
+
+    def add(self, node, queue):
+        if (self.budget - node.g_score) <= 0:
+            return
+        priority = self.w1 * self.heuristic(node.state, node.goal.state)/(self.budget - node.g_score)
+        heapq.heappush(queue, (priority, node))
+    
+    def restart(self):
+        if self.budget <= 0:
+            return False
+        if not super().restart():
+            return False
+        if self.check() != None:
+            self.budget = self.check().g_score - 10
+        return True
