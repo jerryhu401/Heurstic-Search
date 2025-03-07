@@ -1,6 +1,5 @@
 import Util
 import math
-import heapq
 import heuristics
 import Queues as Q
 
@@ -19,8 +18,8 @@ def ARA(start, open):
     while open.restart():
         goal = None
         while not open.is_empty():
-            if open.peek()[1].state == open.goal.state:
-                goal = open.peek()[1]
+            goal = open.check()
+            if goal != None:
                 break
             open.iterate_queues()
         if goal != None:
@@ -38,8 +37,12 @@ if __name__ == "__main__":
     while not (grid.path_exists(start, goal.state) and grid.is_traversable(*(start.state)) and grid.is_traversable(*(goal.state))):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
+    h = [heuristics.heuristic_euclidean, heuristics.heuristic_manhattan, heuristics.heuristic_chebyshev, heuristics.heuristic_octile]
+
     queue = Q.PriorityQueue(heuristics.heuristic_euclidean, start, grid)
-    res = ARA(start, queue)
+    queues = Q.MultiQueue(h, start, grid)
+
+    res = ARA(start, queues)
     
     
     paths, costs = res
