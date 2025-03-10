@@ -3,36 +3,39 @@ import heapq
 from typing import Callable, List, Dict, Set, Tuple, Optional
 import Util
 
+def g_score_DC(original, node):
+    return original.g_score <= node.g_score
+
 class DominanceCheck():
     def __init__(self, dominate):
         self.open = set()
         self.incons = set()
         self.nodes = dict()
+        self.closed = set()
         self.dominate = dominate
 
     def insert(self, node):
-        self.nodes[node.state] = node
         self.open.add(node)
 
     def expand(self, node):
-        self.nodes[node.state] = node
         self.open.remove(node)
+        self.closed.add(node.state)
 
     def is_dominated(self,node):
-        state = node.state
-        if state in self.nodes:
-            original = self.nodes[state]
-            if not self.dominate(original, node):
-                self.nodes[state] = node
-                self.incons.add(original)
-            return True
-        self.open.add(node)
-        return False
+        og = self.nodes.get(node.state, None)
+        if og == None or not self.dominate(og, node):
+            self.nodes[node.state] = node
+            if node.state not in self.closed:
+                self.insert(node)
+                return False
+            else:
+                self.incons.add(node)
+        return True
     
     def clear(self):
         self.open = set()
         self.incons = set()
-        self.nodes = dict()
+        self.closed = set()
 
     def get_incons(self):
         return self.incons

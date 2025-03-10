@@ -100,7 +100,9 @@ class Node:
         self.goal = goal
 
     def __hash__(self):
-        return hash(self.state)
+        if self.parent == None:
+            return hash(self.state) + hash(self.g_score)
+        return hash(self.state) + hash(self.g_score) + hash(self.parent.state)
 
     def __eq__(self, other):
         return other != None and self.state == other.state
@@ -191,24 +193,20 @@ class Gridworld:
     def path_exists(self, start, goal):
         open_list = PQWithUpdate()
         open_list.push((start), 1)
-        open_set = {start.state}
         closed_set = set()
 
         while not open_list.isEmpty():
             current_node = open_list.pop()
-            open_set.remove(current_node.state)
             closed_set.add(current_node.state)
 
             if current_node.state == goal:
                 return True
 
             for neighbor in current_node.expand_node(self):
-                g_score = neighbor.g_score
 
                 if neighbor.state not in closed_set:
                     h_score = 1
                     open_list.update((neighbor), h_score)
-                    open_set.add(neighbor.state)
 
         return False
     
