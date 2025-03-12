@@ -1,22 +1,24 @@
 import heapq
-from typing import Callable, List, Dict, Set, Tuple, Optional
-import Util as Util
+from typing import List, Tuple, TypeVar, Generic
 
-class PriorityQueue():
-    def __init__(self):
-        self.heap = []
+T = TypeVar("T")
 
-    def push(self, priority, node):
+class PriorityQueue(Generic[T]):
+    def __init__(self) -> None:
+        self.heap: List[Tuple[float, T]] = []
+
+    def push(self, priority: float, node: T) -> None:
         heapq.heappush(self.heap, (priority, node))
 
-    def pop(self):
+    def pop(self) -> T:
         return heapq.heappop(self.heap)[1]
     
-    def peek(self):
+    def peek(self) -> Tuple[float, T]:
         return self.heap[0]
     
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return len(self.heap) == 0
     
-    def clear(self):
+    def clear(self) -> None:
         self.heap = []
+
