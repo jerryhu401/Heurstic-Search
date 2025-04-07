@@ -4,6 +4,7 @@ import Priority as P
 import Util as Util
 import heuristics as heuristics
 import DC as DC
+import User
 from typing import Callable, List, Tuple, Optional
 
 class GenericFrontier:
@@ -16,11 +17,10 @@ class GenericFrontier:
     def insert(self, node: Util.Node) -> None:
         priority: float = self.priority(node)
         self.queue.push(priority, node)
-        self.DC.insert(node)
 
     def remove(self) -> Util.Node:
         node: Util.Node = self.queue.pop()
-        self.DC.expand(node)
+        self.DC.insert(node)
         return node
 
     def expand_node(self, node: Util.Node) -> None:
@@ -39,9 +39,11 @@ class GenericFrontier:
         if not self.priority.valid():
             return False
         
-        open_set = self.DC.get_open()
+        open = []
+        for p,node in self.queue.heap:
+            open.append(node)
         incons = self.DC.get_incons()
-        new_open: List[Util.Node] = list(open_set | incons)
+        new_open: List[Util.Node] = open + incons
         self.queue.clear()
         self.DC.clear()
         
@@ -98,11 +100,12 @@ class MultiFrontier:
         self.index = 0
         return True
         
-def ARA(start: Util.Node, goal_check: Callable[[Util.Node], bool], frontier: MultiFrontier) -> Tuple[List[List[Tuple[int, int]]], List[float]]:
+def ARA(start: Util.Node, goal_check: Callable[[Util.Node], bool], frontier: MultiFrontier, 
+        checkStop = User.checkStop, update = User.updateGeneric) -> Tuple[List[List[Tuple[int, int]]], List[float]]:
     frontier.insert(start)
     paths: List[List[Tuple[int, int]]] = []
     costs: List[float] = []
-    while frontier.restart():
+    while checkStop(frontier):
         curr: Optional[Util.Node] = None
         while not frontier.is_empty():
             curr = frontier.peek()[1]
@@ -112,6 +115,7 @@ def ARA(start: Util.Node, goal_check: Callable[[Util.Node], bool], frontier: Mul
                 break
             node = frontier.remove()
             frontier.expand_node(node)
+        update(frontier)
     return paths, costs
 
 def reconstruct_path(start: Util.Node, current: Util.Node) -> List[Tuple[int, int]]:
@@ -156,7 +160,7 @@ if __name__ == "__main__":
     def goal_check(node: Util.Node) -> bool:
         return node.state == goal.state
 
-    res: Tuple[List[List[Tuple[int, int]]], List[float]] = ARA(start, goal_check, multi)
+    res: Tuple[List[List[Tuple[int, int]]], List[float]] = ARA(start, goal_check, single)
     
     paths, costs = res
 

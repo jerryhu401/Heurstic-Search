@@ -6,42 +6,42 @@ import Util as Util
 def g_score_DC(original: Util.Node, node: Util.Node) -> bool:
     return original.g_score <= node.g_score
 
+def key(node: Util.Node) -> str:
+    return node.state
+
 class DominanceCheck():
-    def __init__(self, dominate: Callable[[Util.Node, Util.Node], bool]) -> None:
-        self.open: Set[Util.Node] = set()
-        self.incons: Set[Util.Node] = set()
-        self.nodes: Dict[str, Util.Node] = dict()
-        self.closed: Set[str] = set()
+    #key function for node to not use state
+    def __init__(self, dominate: Callable[[Util.Node, Util.Node], bool], getKey = key) -> None:
+        self.incons = []
+        self.keyToNode: Dict[str, Util.Node] = dict()
         self.dominate = dominate
+        self.getKey = getKey 
 
-    def insert(self, node: Util.Node) -> None:
-        self.open.add(node)
 
-    def expand(self, node: Util.Node) -> None:
-        self.open.remove(node)
-        self.closed.add(node.state)
+    def insert(self, node: Util.Node) -> None: #rename this to insert
+        key = self.getKey(node)
+        self.keyToNode[key] = node 
 
     def is_dominated(self, node: Util.Node) -> bool:
-        og = self.nodes.get(node.state, None)
-        if og is None or not self.dominate(og, node):
-            self.nodes[node.state] = node
-            if node.state not in self.closed:
-                self.insert(node)
-                return False
-            else:
-                self.incons.add(node)
-        return True
+        #use code base logic
+        #DC does not care about open 
+        key = self.getKey(node)
+        if key in self.keyToNode:
+            existingNode = self.keyToNode[key]
+            if not self.dominate(existingNode, node):
+                self.incons.append(node)
+            return True
+        return False
     
     def clear(self) -> None:
-        self.open = set()
-        self.incons = set()
-        self.closed = set()
+        self.incons = []
+        self.keyToNode = dict()
 
     def get_incons(self) -> Set[Util.Node]:
         return self.incons
     
     def get_open(self) -> Set[Util.Node]:
-        return self.open
+        return list(self.keyToNode.values())
     
     def copy(self) -> 'DominanceCheck':
         return DominanceCheck(self.dominate)

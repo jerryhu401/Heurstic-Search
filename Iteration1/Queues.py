@@ -3,11 +3,11 @@ from typing import List, Tuple, TypeVar, Generic
 
 T = TypeVar("T")
 
-class PriorityQueue(Generic[T]):
+class PriorityQueue(Generic[T]): #wrapper for heapq
     def __init__(self) -> None:
         self.heap: List[Tuple[float, T]] = []
 
-    def push(self, priority: float, node: T) -> None:
+    def push(self, priority: float, node: T) -> None: #priority type can be generalized
         heapq.heappush(self.heap, (priority, node))
 
     def pop(self) -> T:

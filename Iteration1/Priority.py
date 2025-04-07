@@ -1,9 +1,10 @@
 import Util as Util
 import math
+from typing import Callable, List, Dict, Set, Tuple, Optional
 
 class Priority:
-    def __init__(self, heuristic: callable, w1: float = 1, e: float = 0, time: int = 1):
-        self.heuristic: callable = heuristic
+    def __init__(self, heuristic: Callable[[Util.Node], float], w1: float = 1, e: float = 0, time: int = 1):
+        self.heuristic: Callable[[Util.Node], float] = heuristic
         self.w1: float = w1
         self.e: float = e
         self.time: int = time
@@ -18,7 +19,7 @@ class Priority:
     def __call__(self, node: Util.Node) -> float:
         state = node.state
         g = node.g_score
-        goal_state = node.goal.state
+        goal_state = node.goal.state #heuristics should not take in state
         return self.w1 * self.heuristic(state, goal_state) + g
     
 
