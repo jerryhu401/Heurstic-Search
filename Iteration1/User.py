@@ -15,3 +15,13 @@ def updateGeneric(frontier):
         frontier.insert(node)
     
     frontier.priority.update()
+
+def checkStopMulti(frontier):
+    return frontier.anchor.priority.valid() and all(f.priority.valid() for f in frontier.inads)
+
+
+def updateMulti(frontier):
+    updateGeneric(frontier.anchor)
+    for F in frontier.inads:
+        updateGeneric(F)
+    frontier.picker.update()
