@@ -21,6 +21,7 @@ def checkStopMulti(frontier):
 
 
 def updateMulti(frontier):
+    frontier.picker.update()
     updateGeneric(frontier.anchor)
     for F in frontier.inads:
         updateGeneric(F)

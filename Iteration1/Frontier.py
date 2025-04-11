@@ -56,7 +56,7 @@ class FrontierPicker:
         self.w2 = max(self.w2 - self.e, 1)
         self.index = 0
         
-class MultiFrontier: #take in a bunch of frontiers and a frontier selector with w2
+class MultiFrontier: 
     def __init__(self, frontiers, frontierPicker) -> None:
         self.anchor = frontiers[0]
         self.inads = frontiers[1:]
@@ -158,4 +158,4 @@ if __name__ == "__main__":
         grid.draw_grid(paths, costs)
     else:
         print("No path found")
-        grid.draw_grid(None)
+        grid.draw_grid(None, None)

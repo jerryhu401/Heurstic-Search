@@ -1,18 +1,19 @@
 import math
+import Util as Util
 from typing import Tuple
 
-def heuristic_manhattan(node: Tuple[int, int], goal: Tuple[int, int]) -> int:
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+def heuristic_manhattan(node: Util.Node, goal: Util.Node) -> int:
+    return abs(node.state[0] - goal.state[0]) + abs(node.state[1] - goal.state[1])
 
-def heuristic_euclidean(node: Tuple[int, int], goal: Tuple[int, int]) -> float:
-    return ((node[0] - goal[0]) ** 2 + (node[1] - goal[1]) ** 2) ** 0.5
+def heuristic_euclidean(node: Util.Node, goal: Util.Node) -> float:
+    return ((node.state[0] - goal.state[0]) ** 2 + (node.state[1] - goal.state[1]) ** 2) ** 0.5
 
-def heuristic_chebyshev(node: Tuple[int, int], goal: Tuple[int, int]) -> int:
-    return max(abs(node[0] - goal[0]), abs(node[1] - goal[1]))
+def heuristic_chebyshev(node: Util.Node, goal: Util.Node) -> int:
+    return max(abs(node.state[0] - goal.state[0]), abs(node.state[1] - goal.state[1]))
 
-def heuristic_octile(node: Tuple[int, int], goal: Tuple[int, int]) -> float:
-    dx = abs(node[0] - goal[0])
-    dy = abs(node[1] - goal[1])
+def heuristic_octile(node: Util.Node, goal: Util.Node) -> float:
+    dx = abs(node.state[0] - goal.state[0])
+    dy = abs(node.state[1] - goal.state[1])
     return (dx + dy) + (math.sqrt(2) - 2) * min(dx, dy)
 
 def linear(C: float, h_n: float, g_n: float) -> float:

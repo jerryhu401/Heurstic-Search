@@ -19,8 +19,8 @@ class Priority:
     def __call__(self, node: Util.Node) -> float:
         state = node.state
         g = node.g_score
-        goal_state = node.goal.state #heuristics should not take in state
-        return self.w1 * self.heuristic(state, goal_state) + g
+        goal = node.goal
+        return self.w1 * self.heuristic(node, goal) + g
     
 
 class PriorityPotential:
@@ -51,8 +51,8 @@ class PriorityPotential:
     def __call__(self, node: Util.Node) -> float:
         state = node.state
         g = node.g_score
-        goal_state = node.goal.state
-        h = self.w1 * self.heuristic(state, goal_state)
+        goal = node.goal
+        h = self.w1 * self.heuristic(node, goal)
         if h == 0:
             return 0
         if (self.budget - g) <= 0:
