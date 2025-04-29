@@ -8,15 +8,13 @@ import User
 from typing import Callable, List, Tuple, Optional
 
 class GenericFrontier:
-    def __init__(self, queue: Q.PriorityQueue, DC: DC.DominanceCheck, priority: P.Priority, grid: Util.Gridworld) -> None:
+    def __init__(self, queue: Q.PriorityQueue, DC: DC.DominanceCheck, grid: Util.Gridworld) -> None:
         self.queue = queue
         self.DC = DC
-        self.priority = priority
         self.grid = grid
 
     def insert(self, node: Util.Node) -> None:
-        priority: float = self.priority(node)
-        self.queue.push(priority, node)
+        self.queue.push(node)
 
     def remove(self) -> Util.Node:
         node: Util.Node = self.queue.pop()
@@ -26,8 +24,7 @@ class GenericFrontier:
     def expand_node(self, node: Util.Node) -> None:
         for neighbor in self.grid.expand_node(node):
             if not self.DC.is_dominated(neighbor):
-                priority: float = self.priority(neighbor)
-                self.queue.push(priority, neighbor)
+                self.queue.push(neighbor)
     
     def peek(self) -> Tuple[float, Util.Node]:
         return self.queue.peek()
@@ -136,12 +133,12 @@ if __name__ == "__main__":
     ]
 
     p: List[P.Priority] = [P.Priority(h[i], w1, e, t) for i in range(len(h))]
-    dc: DC.DominanceCheck = DC.DominanceCheck(DC.g_score_DC)
-    queue: Q.PriorityQueue = Q.PriorityQueue()
-    queues: List[Q.PriorityQueue] = [Q.PriorityQueue() for _ in range(len(h))]
-    frontiers: List[GenericFrontier] = [GenericFrontier(queues[i], dc.copy(), p[i], grid) for i in range(len(h))]
+    dc: DC.DominanceCheck = DC.DominanceCheck(DC.g_score_DC, DC.key)
+    queue: Q.PriorityQueue = Q.PriorityQueue(p[0])
+    queues: List[Q.PriorityQueue] = [Q.PriorityQueue(p[i]) for i in range(len(h))]
+    frontiers: List[GenericFrontier] = [GenericFrontier(queues[i], dc.copy(), grid) for i in range(len(h))]
     frontierPicker: FrontierPicker = FrontierPicker(frontiers, 5, 1)
-    single: GenericFrontier = GenericFrontier(queue, dc, p[0], grid)
+    single: GenericFrontier = GenericFrontier(queue, dc, grid)
     multi: MultiFrontier = MultiFrontier(frontiers, frontierPicker)
     
     def goal_check(node: Util.Node) -> bool:

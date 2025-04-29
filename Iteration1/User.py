@@ -1,6 +1,6 @@
 
 def checkStop(frontier):
-    return frontier.priority.valid()
+    return frontier.queue.priority.valid()
 
 def updateGeneric(frontier):
     open = []
@@ -14,11 +14,10 @@ def updateGeneric(frontier):
     for node in new_open:
         frontier.insert(node)
     
-    frontier.priority.update()
+    frontier.queue.priority.update()
 
 def checkStopMulti(frontier):
-    return frontier.anchor.priority.valid() and all(f.priority.valid() for f in frontier.inads)
-
+    return frontier.anchor.queue.priority.valid() and all(f.queue.priority.valid() for f in frontier.inads)
 
 def updateMulti(frontier):
     frontier.picker.update()

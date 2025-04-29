@@ -10,13 +10,11 @@ def key(node: Util.Node) -> str:
     return node.state
 
 class DominanceCheck():
-    #key function for node to not use state
-    def __init__(self, dominate: Callable[[Util.Node, Util.Node], bool], getKey = key) -> None:
+    def __init__(self, dominate: Callable[[Util.Node, Util.Node], bool], getKey) -> None:
         self.incons = []
         self.keyToNode: Dict[str, Util.Node] = dict()
         self.dominate = dominate
         self.getKey = getKey 
-
 
     def insert(self, node: Util.Node) -> None:
         key = self.getKey(node)
@@ -42,5 +40,5 @@ class DominanceCheck():
         return list(self.keyToNode.values())
     
     def copy(self) -> 'DominanceCheck':
-        return DominanceCheck(self.dominate)
+        return DominanceCheck(self.dominate, self.getKey)
     
