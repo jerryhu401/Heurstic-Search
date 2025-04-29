@@ -10,25 +10,25 @@ from abc import ABC, abstractmethod
 
 class AbstractSuccessorGenerator(ABC):
     @abstractmethod
-    def __call__(self, node: "Util.Node") -> List["Util.Node"]:
+    def __call__(self, node: "Util.AbstractNode") -> List["Util.AbstractNode"]:
         pass
 
 
 class AbstractFrontier(ABC):
     @abstractmethod
-    def insert(self, node: "Util.Node") -> None:
+    def insert(self, node: "Util.AbstractNode") -> None:
         pass
 
     @abstractmethod
-    def remove(self) -> "Util.Node":
+    def remove(self) -> "Util.AbstractNode":
         pass
 
     @abstractmethod
-    def expand_node(self, node: "Util.Node") -> None:
+    def expand_node(self, node: "Util.AbstractNode") -> None:
         pass
 
     @abstractmethod
-    def peek(self) -> Tuple[float, "Util.Node"]:
+    def peek(self) -> Tuple[float, "Util.AbstractNode"]:
         pass
 
     @abstractmethod
@@ -48,19 +48,19 @@ class AbstractFrontierPicker(ABC):
 
 class AbstractMultiFrontier(ABC):
     @abstractmethod
-    def insert(self, node: "Util.Node") -> None:
+    def insert(self, node: "Util.AbstractNode") -> None:
         pass
 
     @abstractmethod
-    def remove(self) -> "Util.Node":
+    def remove(self) -> "Util.AbstractNode":
         pass
 
     @abstractmethod
-    def expand_node(self, node: "Util.Node") -> None:
+    def expand_node(self, node: "Util.AbstractNode") -> None:
         pass
 
     @abstractmethod
-    def peek(self) -> Tuple[float, "Util.Node"]:
+    def peek(self) -> Tuple[float, "Util.AbstractNode"]:
         pass
 
     @abstractmethod
@@ -72,13 +72,13 @@ class successorGenerator(AbstractSuccessorGenerator):
     def __init__(self, grid: Util.Gridworld) -> None:
         self.grid = grid
 
-    def __call__(self, node: Util.Node) -> List[Util.Node]:
+    def __call__(self, node: Util.AbstractNode) -> List[Util.AbstractNode]:
         x, y = node.state
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         if self.grid.connectivity == 8:
             directions.extend([(-1, -1), (-1, 1), (1, -1), (1, 1)])
 
-        result: List[Util.Node] = []
+        result: List[Util.AbstractNode] = []
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
             if self.grid.is_traversable(nx, ny):
@@ -92,20 +92,20 @@ class GenericFrontier(AbstractFrontier):
         self.DC = DC
         self.getSucc = getSucc
 
-    def insert(self, node: Util.Node) -> None:
+    def insert(self, node: Util.AbstractNode) -> None:
         self.queue.push(node)
 
-    def remove(self) -> Util.Node:
-        node: Util.Node = self.queue.pop()
+    def remove(self) -> Util.AbstractNode:
+        node: Util.AbstractNode = self.queue.pop()
         self.DC.insert(node)
         return node
 
-    def expand_node(self, node: Util.Node) -> None:
+    def expand_node(self, node: Util.AbstractNode) -> None:
         for neighbor in self.getSucc(node):
             if not self.DC.is_dominated(neighbor):
                 self.queue.push(neighbor)
 
-    def peek(self) -> Tuple[float, Util.Node]:
+    def peek(self) -> Tuple[float, Util.AbstractNode]:
         return self.queue.peek()
 
     def is_empty(self) -> bool:
@@ -140,21 +140,21 @@ class MultiFrontier(AbstractMultiFrontier):
         self.picker = frontierPicker
         self.current = self.anchor
 
-    def insert(self, node: Util.Node) -> None:
+    def insert(self, node: Util.AbstractNode) -> None:
         self.anchor.insert(node)
         for F in self.inads:
             F.insert(node)
 
-    def remove(self) -> Util.Node:
+    def remove(self) -> Util.AbstractNode:
         F: AbstractFrontier = self.current
         return F.remove()
 
-    def expand_node(self, node: Util.Node) -> None:
+    def expand_node(self, node: Util.AbstractNode) -> None:
         self.anchor.expand_node(node)
         for F in self.inads:
             F.expand_node(node)
 
-    def peek(self) -> Tuple[float, Util.Node]:
+    def peek(self) -> Tuple[float, Util.AbstractNode]:
         self.current = self.picker.chooseFrontier()
         return self.current.peek()
 
@@ -162,13 +162,13 @@ class MultiFrontier(AbstractMultiFrontier):
         return self.anchor.is_empty()
     
         
-def search(start: Util.Node, goal_check: Callable[[Util.Node], bool], frontier: MultiFrontier, 
+def search(start: Util.AbstractNode, goal_check: Callable[[Util.AbstractNode], bool], frontier: MultiFrontier, 
         checkStop = User.checkStop, update = User.updateGeneric) -> Tuple[List[List[Tuple[int, int]]], List[float]]:
     frontier.insert(start)
     paths: List[List[Tuple[int, int]]] = []
     costs: List[float] = []
     while checkStop(frontier):
-        curr: Optional[Util.Node] = None
+        curr: Optional[Util.AbstractNode] = None
         while not frontier.is_empty():
             curr = frontier.peek()[1]
             if goal_check(curr):
@@ -180,7 +180,7 @@ def search(start: Util.Node, goal_check: Callable[[Util.Node], bool], frontier: 
         update(frontier)
     return paths, costs
 
-def reconstruct_path(start: Util.Node, current: Util.Node) -> List[Tuple[int, int]]:
+def reconstruct_path(start: Util.AbstractNode, current: Util.AbstractNode) -> List[Tuple[int, int]]:
     path: List[Tuple[int, int]] = []
     while current != start:
         path.append(current.state)
@@ -196,8 +196,8 @@ if __name__ == "__main__":
     height: int = 20
     grid: Util.Gridworld = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
 
-    goal: Util.Node = Util.Node((height - 1, width - 1), None, math.inf, None)
-    start: Util.Node = Util.Node((0, 0), None, 0, goal)
+    goal: Util.AbstractNode = Util.Node((height - 1, width - 1), None, math.inf, None)
+    start: Util.AbstractNode = Util.Node((0, 0), None, 0, goal)
 
     while not (grid.path_exists(start, goal.state) and grid.is_traversable(*start.state) and grid.is_traversable(*goal.state)):
         grid = Util.Gridworld(width, height, 0.3, 10, connectivity=8)
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     w1: int = 10
     e: int = 2
     t: int = 5
-    h: List[Callable[[Util.Node], float]] = [
+    h: List[Callable[[Util.AbstractNode], float]] = [
         heuristics.heuristic_euclidean,
         heuristics.heuristic_manhattan,
         heuristics.heuristic_chebyshev,
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     single: GenericFrontier = GenericFrontier(queue, dc, successorGen)
     multi: MultiFrontier = MultiFrontier(frontiers, frontierPicker)
     
-    def goal_check(node: Util.Node) -> bool:
+    def goal_check(node: Util.AbstractNode) -> bool:
         return node.state == goal.state
 
     #res: Tuple[List[List[Tuple[int, int]]], List[float]] = search(start, goal_check, single)

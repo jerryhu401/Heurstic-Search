@@ -1,4 +1,3 @@
-
 def checkStop(frontier):
     return frontier.queue.priority.valid()
 

@@ -3,27 +3,9 @@ import matplotlib.colors as mcolors
 import numpy as np
 import logging
 import heapq
+import Queues
 from typing import Optional, Tuple, List, Dict, Set
-
-
-class PQ:
-    def __init__(self) -> None:
-        self.queue: List[Tuple[int, int, object]] = []
-        self.count: int = 0
-
-    def push(self, node: object, priority: int) -> None:
-        heapq.heappush(self.queue, (priority, self.count, node))
-        self.count += 1
-
-    def peek(self) -> Tuple[int, int, object]:
-        return self.queue[0]
-
-    def pop(self) -> object:
-        return heapq.heappop(self.queue)[-1]
-
-    def isEmpty(self) -> bool:
-        return len(self.queue) == 0
-
+from abc import ABC, abstractmethod
 
 class PQWithUpdate:
     def __init__(self) -> None:
@@ -90,7 +72,44 @@ class PQWithUpdate:
         logging.info(f"Priority queue contents logged as set: {queue_elements}")
 
 
-class Node:
+class AbstractNode(ABC):
+    @abstractmethod
+    def __hash__(self) -> int: pass
+
+    @abstractmethod
+    def __eq__(self, other: object) -> bool: pass
+
+    @abstractmethod
+    def __ne__(self, other: object) -> bool: pass
+
+    @abstractmethod
+    def __lt__(self, other: "AbstractNode") -> bool: pass
+
+    @abstractmethod
+    def __gt__(self, other: "AbstractNode") -> bool: pass
+
+
+class AbstractGridworld(ABC):
+    @abstractmethod
+    def is_within_bounds(self, x: int, y: int) -> bool: pass
+
+    @abstractmethod
+    def is_traversable(self, x: int, y: int) -> bool: pass
+
+    @abstractmethod
+    def expand_node(self, node: AbstractNode) -> List["AbstractNode"]: pass
+
+    @abstractmethod
+    def draw_grid(self, paths: List[List[Tuple[int, int]]], costs: List[int]) -> None: pass
+
+    @abstractmethod
+    def path_exists(self, start: Tuple[int, int], goal: Tuple[int, int]) -> bool: pass
+
+    @abstractmethod
+    def log(self, elems, message): pass
+
+
+class Node(AbstractNode):
     def __init__(self, state: Tuple[int, int], parent: Optional["Node"], g_score: int, goal: Tuple[int, int]) -> None:
         self.state: Tuple[int, int] = state
         self.parent: Optional["Node"] = parent
@@ -114,7 +133,8 @@ class Node:
     def __gt__(self, other: "Node") -> bool:
         return self.g_score > other.g_score
 
-class Gridworld:
+
+class Gridworld(AbstractGridworld):
     def __init__(self, width: int, height: int, obstacle_prob: float, max_cost: int, connectivity: int) -> None:
         self.width: int = width
         self.height: int = height
@@ -201,7 +221,7 @@ class Gridworld:
                     open_list.update(neighbor, 1)
 
         return False
-    
+
     def log(self, elems, message): 
         with open(self.log_filename, "a") as log_file:
             log_file.write(f"{message} {elems}\n")
