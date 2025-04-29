@@ -7,11 +7,29 @@ import DC as DC
 import User
 from typing import Callable, List, Tuple, Optional
 
+class successorGenerator:
+    def __init__(self, grid: Util.Gridworld) -> None:
+        self.grid = grid
+
+    def __call__(self, node: Util.Node) -> List[Util.Node]:
+        x, y = node.state
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        if self.grid.connectivity == 8:
+            directions.extend([(-1, -1), (-1, 1), (1, -1), (1, 1)])
+
+        result: List[Util.Node] = []
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if self.grid.is_traversable(nx, ny):
+                result.append(Util.Node((nx, ny), node, node.g_score + self.grid.grid[x][y], node.goal))
+
+        return result
+
 class GenericFrontier:
-    def __init__(self, queue: Q.PriorityQueue, DC: DC.DominanceCheck, grid: Util.Gridworld) -> None:
+    def __init__(self, queue: Q.PriorityQueue, DC: DC.DominanceCheck, getSucc) -> None:
         self.queue = queue
         self.DC = DC
-        self.grid = grid
+        self.getSucc = getSucc
 
     def insert(self, node: Util.Node) -> None:
         self.queue.push(node)
@@ -22,7 +40,7 @@ class GenericFrontier:
         return node
 
     def expand_node(self, node: Util.Node) -> None:
-        for neighbor in self.grid.expand_node(node):
+        for neighbor in self.getSucc(node):
             if not self.DC.is_dominated(neighbor):
                 self.queue.push(neighbor)
     
@@ -132,13 +150,15 @@ if __name__ == "__main__":
         heuristics.heuristic_octile
     ]
 
+    successorGen: successorGenerator = successorGenerator(grid)
+
     p: List[P.Priority] = [P.Priority(h[i], w1, e, t) for i in range(len(h))]
     dc: DC.DominanceCheck = DC.DominanceCheck(DC.g_score_DC, DC.key)
     queue: Q.PriorityQueue = Q.PriorityQueue(p[0])
     queues: List[Q.PriorityQueue] = [Q.PriorityQueue(p[i]) for i in range(len(h))]
-    frontiers: List[GenericFrontier] = [GenericFrontier(queues[i], dc.copy(), grid) for i in range(len(h))]
+    frontiers: List[GenericFrontier] = [GenericFrontier(queues[i], dc.copy(), successorGen) for i in range(len(h))]
     frontierPicker: FrontierPicker = FrontierPicker(frontiers, 5, 1)
-    single: GenericFrontier = GenericFrontier(queue, dc, grid)
+    single: GenericFrontier = GenericFrontier(queue, dc, successorGen)
     multi: MultiFrontier = MultiFrontier(frontiers, frontierPicker)
     
     def goal_check(node: Util.Node) -> bool:
