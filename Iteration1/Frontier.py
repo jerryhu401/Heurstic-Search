@@ -6,8 +6,69 @@ import heuristics as heuristics
 import DC as DC
 import User
 from typing import Callable, List, Tuple, Optional
+from abc import ABC, abstractmethod
 
-class successorGenerator:
+class AbstractSuccessorGenerator(ABC):
+    @abstractmethod
+    def __call__(self, node: "Util.Node") -> List["Util.Node"]:
+        pass
+
+
+class AbstractFrontier(ABC):
+    @abstractmethod
+    def insert(self, node: "Util.Node") -> None:
+        pass
+
+    @abstractmethod
+    def remove(self) -> "Util.Node":
+        pass
+
+    @abstractmethod
+    def expand_node(self, node: "Util.Node") -> None:
+        pass
+
+    @abstractmethod
+    def peek(self) -> Tuple[float, "Util.Node"]:
+        pass
+
+    @abstractmethod
+    def is_empty(self) -> bool:
+        pass
+
+
+class AbstractFrontierPicker(ABC):
+    @abstractmethod
+    def chooseFrontier(self) -> AbstractFrontier:
+        pass
+
+    @abstractmethod
+    def update(self) -> None:
+        pass
+
+
+class AbstractMultiFrontier(ABC):
+    @abstractmethod
+    def insert(self, node: "Util.Node") -> None:
+        pass
+
+    @abstractmethod
+    def remove(self) -> "Util.Node":
+        pass
+
+    @abstractmethod
+    def expand_node(self, node: "Util.Node") -> None:
+        pass
+
+    @abstractmethod
+    def peek(self) -> Tuple[float, "Util.Node"]:
+        pass
+
+    @abstractmethod
+    def is_empty(self) -> bool:
+        pass
+
+
+class successorGenerator(AbstractSuccessorGenerator):
     def __init__(self, grid: Util.Gridworld) -> None:
         self.grid = grid
 
@@ -25,8 +86,8 @@ class successorGenerator:
 
         return result
 
-class GenericFrontier:
-    def __init__(self, queue: Q.PriorityQueue, DC: DC.DominanceCheck, getSucc) -> None:
+class GenericFrontier(AbstractFrontier):
+    def __init__(self, queue: Q.PriorityQueue, DC: DC.DominanceCheck, getSucc: AbstractSuccessorGenerator) -> None:
         self.queue = queue
         self.DC = DC
         self.getSucc = getSucc
@@ -43,55 +104,56 @@ class GenericFrontier:
         for neighbor in self.getSucc(node):
             if not self.DC.is_dominated(neighbor):
                 self.queue.push(neighbor)
-    
+
     def peek(self) -> Tuple[float, Util.Node]:
         return self.queue.peek()
-    
+
     def is_empty(self) -> bool:
         return self.queue.is_empty()
-    
 
-class FrontierPicker:
-    def __init__(self, frontiers, w2 = 5, e = 1) -> None:
+
+class FrontierPicker(AbstractFrontierPicker):
+    def __init__(self, frontiers: List[AbstractFrontier], w2: float = 5, e: float = 1) -> None:
         self.anchor = frontiers[0]
         self.inads = frontiers[1:]
         self.w2 = w2
         self.e = e
         self.index = 0
 
-    def chooseFrontier(self) -> GenericFrontier:
-        frontier: GenericFrontier = self.inads[self.index]
+    def chooseFrontier(self) -> AbstractFrontier:
+        frontier = self.inads[self.index]
         if frontier.peek()[0] > self.w2 * self.anchor.peek()[0]:
             frontier = self.anchor
         else:
             self.index = (self.index + 1) % len(self.inads)
         return frontier
-    
+
     def update(self) -> None:
         self.w2 = max(self.w2 - self.e, 1)
         self.index = 0
-        
-class MultiFrontier: 
-    def __init__(self, frontiers, frontierPicker) -> None:
+
+
+class MultiFrontier(AbstractMultiFrontier):
+    def __init__(self, frontiers: List[AbstractFrontier], frontierPicker: AbstractFrontierPicker) -> None:
         self.anchor = frontiers[0]
         self.inads = frontiers[1:]
         self.picker = frontierPicker
         self.current = self.anchor
-    
+
     def insert(self, node: Util.Node) -> None:
         self.anchor.insert(node)
         for F in self.inads:
             F.insert(node)
 
     def remove(self) -> Util.Node:
-        F: GenericFrontier = self.current
+        F: AbstractFrontier = self.current
         return F.remove()
-    
+
     def expand_node(self, node: Util.Node) -> None:
         self.anchor.expand_node(node)
         for F in self.inads:
             F.expand_node(node)
-    
+
     def peek(self) -> Tuple[float, Util.Node]:
         self.current = self.picker.chooseFrontier()
         return self.current.peek()
