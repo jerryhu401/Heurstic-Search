@@ -1,10 +1,37 @@
+from abc import ABC, abstractmethod
+from typing import List, Tuple, TypeVar, Generic, Callable
 import heapq
-from typing import List, Tuple, TypeVar, Generic
 
 T = TypeVar("T")
 
-class PriorityQueue(Generic[T]): #take in priority function, add a get nodes function
-    def __init__(self, priority) -> None:
+class AbstractPriorityQueue(ABC, Generic[T]):
+    @abstractmethod
+    def push(self, node: T) -> None:
+        pass
+
+    @abstractmethod
+    def pop(self) -> T:
+        pass
+
+    @abstractmethod
+    def peek(self) -> Tuple[float, T]:
+        pass
+
+    @abstractmethod
+    def is_empty(self) -> bool:
+        pass
+
+    @abstractmethod
+    def clear(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_nodes(self) -> List[T]:
+        pass
+
+
+class PriorityQueue(AbstractPriorityQueue[T]):
+    def __init__(self, priority: Callable[[T], float]) -> None:
         self.heap: List[Tuple[float, T]] = []
         self.priority = priority
 
@@ -24,3 +51,5 @@ class PriorityQueue(Generic[T]): #take in priority function, add a get nodes fun
     def clear(self) -> None:
         self.heap = []
 
+    def get_nodes(self) -> List[T]:
+        return [node for _, node in self.heap]
